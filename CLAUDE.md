@@ -38,6 +38,15 @@ setup fails otherwise. Each test spawns its own server on a temp DB and a free p
 USDA/OFF server (`web/tests/mock-external.mjs`, port 18601) via `CALORIE_MAN_USDA_BASE`,
 `CALORIE_MAN_OFF_BASE`, `CALORIE_MAN_OFF_SEARCH_BASE`.
 
+Browser demo (GitHub Pages, built locally, not in CI): `make demo` (wasm + `vite build --mode demo` into
+`web/dist-demo`), `make demo-test` (Playwright, `web/playwright.demo.config.ts`, `web/tests/demo/`),
+`make demo-publish` (pushes `web/dist-demo` to `gh-pages`). Needs the `wasm32-unknown-unknown` target,
+`wasm-bindgen-cli` at the version in `Cargo.lock`, and a clang that targets wasm32 (Homebrew `llvm`; the
+Makefile finds it). `node web/scripts/readme-shots.mjs` refreshes `docs/screenshots/` from the demo build.
+
+Docker: `Dockerfile` (self-hosting image), `deploy/docker-compose.yml` (plain HTTP),
+`deploy/caddy/` (HTTPS via Caddy; `CERTS=cloudflare|internal|public` in `.env`).
+
 `cargo build` also needs `web/dist` to exist (rust-embed). In debug builds the assets are read from disk,
 so `npm run build` in `web/` is enough to see UI changes without recompiling Rust.
 
@@ -51,11 +60,17 @@ so `npm run build` in `web/` is enough to see UI changes without recompiling Rus
   `src/mcp.rs` (JSON-RPC 2.0 / MCP, stateless Streamable HTTP) call into it, so behaviour changes go in
   `service/` and should be tested through both interfaces where relevant.
 - **SQLite access** goes through `AppState::db(|conn| ...)`, which runs on the blocking pool (r2d2, WAL,
-  foreign keys on). Schema/migrations are in `src/db.rs`; non-catalog migrations are versioned by hand via
+  foreign keys on). In the wasm build it runs inline on one in-memory connection. Schema/migrations are in `src/db.rs`; non-catalog migrations are versioned by hand via
   `PRAGMA user_version` (currently 2).
 - **External lookups** (`src/external.rs`): USDA FoodData Central and Open Food Facts, cached in the
   `external_cache` table for 7 days. "costco" is expanded to "kirkland". `CALORIE_MAN_OFFLINE=1`
   disables outbound requests. Parsers are tested against saved real responses in `tests/fixtures/`.
+- **Two targets.** The library also compiles to `wasm32-unknown-unknown` for the browser demo (`demo/`,
+  a cdylib that feeds `fetch` requests from the page into `calorie_man::app()`). Server-only code (r2d2,
+  tokio runtime, rust-embed `web.rs`, tower-http layers, backups to a temp file) is behind
+  `#[cfg(not(target_arch = "wasm32"))]`; dependencies are split by target in `Cargo.toml`. Outbound HTTP
+  goes through `external::http_get`, which wraps the browser's non-`Send` fetch future in `SendWrapper`.
+  Check both: `cargo clippy --all-targets` and `make demo-wasm`.
 - **CLI** (`src/main.rs`): `serve` (default), `mcp-stdio` (stdio→HTTP bridge for stdio-only MCP clients),
   `seed-demo` (`src/seed.rs`).
 - **Key data semantics** (see `docs/PLAN.md` for details):

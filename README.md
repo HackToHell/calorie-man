@@ -3,6 +3,19 @@
 A calorie, protein and nutrient tracker for a household, built to run on your home network. One small Rust
 binary serves the web UI, a JSON API and an MCP endpoint for AI assistants. Data is a single SQLite file.
 
+**[Try the live demo →](https://hacktohell.github.io/calorie-man/)** It runs entirely in your browser: the
+same Rust backend compiled to WebAssembly, with sample data for two people. Nothing you enter is saved;
+reloading the page starts over.
+
+![Today, light theme: calorie and macro gauge, macro split, micronutrients, the week against the budget and the weight trend](docs/screenshots/today-light.webp)
+
+<p align="center"><img src="docs/screenshots/phones.webp" alt="On a phone: the dashboard, logging a portion in the dark theme, and the weight log" width="900"></p>
+
+| | |
+|---|---|
+| ![Meal timing arc, month calendar and today's meals in the dark theme](docs/screenshots/today-dark.webp) | ![The day log with times, the budget and meal timing](docs/screenshots/log-light.webp) |
+| ![Trends over 30 days in the dark theme: intake, balance, protein, weight trend, estimated maintenance](docs/screenshots/trends-dark.webp) | ![Editing the shared "Morning oats" recipe](docs/screenshots/recipe-light.webp) |
+
 The UI follows the "Terrace" design (`docs/design/calorie-man-terrace-2a.html`): stepped corners, pastel macro
 colours, Federo + Outfit (bundled, works offline), light and dark themes (System/Light/Dark in Profile).
 Desktop has a sidebar (Today, Log food, Food bank, Recipes, Trends, Weight, Goals, Profile); phones get a
@@ -28,17 +41,33 @@ bottom bar with an octagon + button.
 - **AI via MCP.** Assistants can search, import or create foods, build recipes, log meals, weights and
   exercise, set goals and read summaries.
 
-## Quick start
+## Self-hosting
+
+**Docker** (any machine on your network):
 
 ```sh
-make release                      # needs Rust + Node; builds target/release/calorie-man with the UI inside
+docker build -t calorie-man .
+docker run -d --name calorie-man --restart unless-stopped -p 8484:8484 -v calorie-man-data:/data calorie-man
+```
+
+Open `http://<that-machine>:8484` on any device at home and add the people in your household. The same thing
+as a Compose file: `docker compose -f deploy/docker-compose.yml up -d`.
+
+**HTTPS with real certificates:** [deploy/caddy/](deploy/caddy/README.md) runs Calorie Man behind Caddy,
+which gets Let's Encrypt certificates through a DNS challenge, so a name like `calories.example.com` works at
+home with nothing exposed to the internet. Caddy's own CA (no domain) and a public, password-protected setup
+are options too.
+
+**Without Docker:**
+
+```sh
+make release                          # needs Rust + Node; builds target/release/calorie-man with the UI inside
 ./target/release/calorie-man serve    # http://<this-machine>:8484 on your network, data in ./data/calorie-man.db
 ```
 
 Options: `--db PATH` (`CALORIE_MAN_DB`), `--bind ADDR` (`CALORIE_MAN_BIND`, default `0.0.0.0:8484`).
 Try it with demo data first: `./target/release/calorie-man seed-demo --db data/demo.db` and serve that file.
-
-Other setups: `deploy/docker-compose.yml`, a systemd unit (`deploy/calorie-man.service`) and a macOS launchd agent
+There is also a systemd unit (`deploy/calorie-man.service`) and a macOS launchd agent
 (`deploy/com.calorie-man.plist`). Add the page to your phone's home screen for an app-like experience.
 
 | Variable | Purpose |
@@ -46,11 +75,12 @@ Other setups: `deploy/docker-compose.yml`, a systemd unit (`deploy/calorie-man.s
 | `USDA_API_KEY` | Free key from https://fdc.nal.usda.gov/api-key-signup (or paste it in Settings). Without one, the shared `DEMO_KEY` allows about 30 searches an hour. |
 | `CALORIE_MAN_OFFLINE=1` | Disable online lookups. |
 | `CALORIE_MAN_ALLOWED_ORIGINS` | Extra browser origins allowed to call `/mcp` (comma-separated, `*` for any). |
+| `TZ` | Time zone used until each person sets their own in Profile. |
 | `RUST_LOG` | Logging, e.g. `calorie_man=debug`. |
 
 **Security:** there is no authentication by design. Keep the server on a trusted network; do not
-port-forward it to the internet. Barcode scanning with the camera is not available, because browsers only
-allow the camera on HTTPS pages; type the digits instead.
+port-forward it to the internet (the Caddy setup's `public` mode adds a password if you must). Barcodes are
+looked up by typing the digits; there is no camera scanner.
 
 ## Connecting an AI assistant (MCP)
 
@@ -85,9 +115,11 @@ src/            Rust server (axum + rusqlite)
   nutrients.rs  the nutrient catalog every layer derives from
   service/      business logic shared by the REST API and MCP
   api.rs mcp.rs external.rs (USDA/OFF) seed.rs
+demo/           the same backend as WebAssembly, for the browser demo
 web/            Svelte 5 + Vite UI, Playwright tests
 tests/          Rust API/MCP integration tests and saved real USDA/OFF responses
-docs/           PLAN.md (design), MCP.md, BUGBASH.md
+deploy/         Docker Compose (plain and with Caddy), systemd, launchd
+docs/           PLAN.md (design), MCP.md, BUGBASH.md, screenshots
 ```
 
 ```sh
@@ -97,6 +129,21 @@ make bugbash    # full bug bash: sweep, fuzz, MCP inspector, report, demo server
 ```
 
 In pi, `/bugbash` runs a bug bash session (`.pi/prompts/bugbash.md`).
+
+**The browser demo** is built locally and published to the `gh-pages` branch. In the demo build
+(`vite build --mode demo`), the page answers its own `/api` and `/mcp` requests with the Rust router compiled
+to `wasm32-unknown-unknown`, on an in-memory SQLite seeded with 60 days of sample data. USDA lookups go
+straight from the browser; Open Food Facts text search is off there because its search server does not
+allow browser requests (barcodes still work).
+
+```sh
+make demo           # needs: rustup target add wasm32-unknown-unknown, wasm-bindgen-cli (version in Cargo.lock),
+                    #        a clang that targets wasm32 (macOS: brew install llvm), optionally binaryen
+make demo-serve     # http://127.0.0.1:8686/calorie-man/
+make demo-test      # Playwright against the demo build
+make demo-publish   # test, then push web/dist-demo to gh-pages
+node web/scripts/readme-shots.mjs   # refresh docs/screenshots from the demo build
+```
 
 Data model, API and design decisions: [docs/PLAN.md](docs/PLAN.md). Backups: Settings → Data (a SQLite
 snapshot, a full JSON export and per-person CSV), or copy `calorie-man.db` while the server is stopped.
