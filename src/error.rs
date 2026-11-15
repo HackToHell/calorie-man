@@ -52,6 +52,7 @@ impl From<rusqlite::Error> for AppError {
     }
 }
 
+#[cfg(not(target_arch = "wasm32"))]
 impl From<r2d2::Error> for AppError {
     fn from(e: r2d2::Error) -> Self {
         AppError::Internal(e.to_string())
@@ -64,6 +65,7 @@ impl From<serde_json::Error> for AppError {
     }
 }
 
+#[cfg(not(target_arch = "wasm32"))]
 impl From<tokio::task::JoinError> for AppError {
     fn from(e: tokio::task::JoinError) -> Self {
         AppError::Internal(e.to_string())

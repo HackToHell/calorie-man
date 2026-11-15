@@ -13,6 +13,9 @@ pub struct Config {
     pub user_agent: String,
     /// Disable all outbound requests (tests, air-gapped setups).
     pub offline: bool,
+    /// Open Food Facts text search. Off in the browser demo, whose page origin the OFF search server
+    /// does not allow; barcode lookups use a different OFF host that does.
+    pub off_text_search: bool,
 }
 
 impl Config {
@@ -42,6 +45,7 @@ impl Config {
             offline: env("CALORIE_MAN_OFFLINE")
                 .map(|v| v == "1" || v == "true")
                 .unwrap_or(false),
+            off_text_search: true,
         }
     }
 }

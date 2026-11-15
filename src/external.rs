@@ -114,21 +114,12 @@ async fn get_json(
     if let Some((k, v)) = secret {
         q.push((k, v));
     }
-    // USDA's front end intermittently answers valid requests with an HTML 400 (and gateways with
-    // 502-504), so retry those a couple of times before giving up.
-    let mut attempt = 0;
-    let resp = loop {
-        attempt += 1;
-        let resp = state.http.get(url).query(&q).send().await.map_err(|e| {
+    let q: Vec<(String, String)> = q.into_iter().map(|(k, v)| (k.to_string(), v)).collect();
+    let (status, text) = http_get(state.http.clone(), url.to_string(), q)
+        .await
+        .map_err(|e| {
             AppError::Upstream(format!("{provider} is unreachable: {}", e.without_url()))
         })?;
-        let transient = matches!(resp.status().as_u16(), 400 | 502 | 503 | 504);
-        if !transient || attempt >= UPSTREAM_ATTEMPTS {
-            break resp;
-        }
-        tokio::time::sleep(std::time::Duration::from_millis(200 * attempt as u64)).await;
-    };
-    let status = resp.status();
     if status.as_u16() == 404 {
         return Err(AppError::NotFound(format!("{provider}: not found")));
     }
@@ -146,10 +137,6 @@ async fn get_json(
             "{provider} returned HTTP {status}"
         )));
     }
-    let text = resp
-        .text()
-        .await
-        .map_err(|e| AppError::Upstream(format!("{provider}: {}", e.without_url())))?;
     let v: Value = serde_json::from_str(&text).map_err(|_| {
         AppError::Upstream(format!(
             "{provider} returned something that is not JSON (service may be down)"
@@ -166,6 +153,42 @@ async fn get_json(
         })
         .await?;
     Ok(v)
+}
+
+/// GET with retries; returns the final status and, on success, the body.
+///
+/// USDA's front end intermittently answers valid requests with an HTML 400 (and gateways with
+/// 502-504), so those are retried a couple of times before giving up.
+fn http_get(
+    client: reqwest::Client,
+    url: String,
+    query: Vec<(String, String)>,
+) -> impl std::future::Future<Output = Result<(reqwest::StatusCode, String), reqwest::Error>> + Send
+{
+    let fut = async move {
+        let mut attempt = 0;
+        loop {
+            attempt += 1;
+            let resp = client.get(&url).query(&query).send().await?;
+            let status = resp.status();
+            let transient = matches!(status.as_u16(), 400 | 502 | 503 | 504);
+            if !transient || attempt >= UPSTREAM_ATTEMPTS {
+                let body = if status.is_success() {
+                    resp.text().await?
+                } else {
+                    String::new()
+                };
+                return Ok((status, body));
+            }
+            #[cfg(not(target_arch = "wasm32"))]
+            tokio::time::sleep(std::time::Duration::from_millis(200 * attempt as u64)).await;
+        }
+    };
+    // In the browser, fetch futures live on the page's single thread and are not Send; axum wants Send
+    // handlers. Nothing ever moves them to another thread there, which is what SendWrapper checks.
+    #[cfg(target_arch = "wasm32")]
+    let fut = send_wrapper::SendWrapper::new(fut);
+    fut
 }
 
 // ---------------------------------------------------------------------------------------------------------
@@ -684,6 +707,13 @@ pub fn parse_off(p: &Value) -> Option<Candidate> {
 }
 
 pub async fn off_search(state: &AppState, q: &str, limit: usize) -> AppResult<Vec<Candidate>> {
+    if !state.cfg.off_text_search {
+        return Err(AppError::Upstream(
+            "Open Food Facts text search is not available here (its search server does not allow \
+             browser requests); search USDA or look up a barcode instead"
+                .into(),
+        ));
+    }
     let q = foods::tokens(q)
         .into_iter()
         .map(|t| if t == "costco" { "kirkland".into() } else { t })
@@ -805,6 +835,12 @@ pub async fn search(
         return Err(bad("search text is required"));
     }
     let limit = limit.clamp(1, 50);
+    // Without OFF text search, "all" means USDA alone rather than USDA plus an error.
+    let source = if source == Source::All && !state.cfg.off_text_search {
+        Source::Usda
+    } else {
+        source
+    };
     let (u, o) = tokio::join!(
         async {
             if source != Source::Off {

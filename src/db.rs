@@ -1,10 +1,12 @@
 use crate::error::{AppError, AppResult};
 use crate::nutrients::CATALOG;
-use r2d2_sqlite::SqliteConnectionManager;
 use rusqlite::Connection;
-use std::path::Path;
 
-pub type Pool = r2d2::Pool<SqliteConnectionManager>;
+#[cfg(not(target_arch = "wasm32"))]
+pub type Pool = r2d2::Pool<r2d2_sqlite::SqliteConnectionManager>;
+/// The browser build has one thread and one in-memory database.
+#[cfg(target_arch = "wasm32")]
+pub type Pool = std::sync::Arc<std::sync::Mutex<Connection>>;
 
 const SCHEMA: &str = r#"
 CREATE TABLE IF NOT EXISTS users (
@@ -140,7 +142,16 @@ fn init_conn(c: &mut Connection) -> rusqlite::Result<()> {
     )
 }
 
-pub fn open_pool(path: &Path) -> anyhow::Result<Pool> {
+#[cfg(target_arch = "wasm32")]
+pub fn open_memory() -> anyhow::Result<Pool> {
+    let mut c = Connection::open_in_memory()?;
+    init_conn(&mut c)?;
+    migrate(&mut c)?;
+    Ok(std::sync::Arc::new(std::sync::Mutex::new(c)))
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+pub fn open_pool(path: &std::path::Path) -> anyhow::Result<Pool> {
     if let Some(dir) = path.parent() {
         if !dir.as_os_str().is_empty() {
             std::fs::create_dir_all(dir)?;
@@ -152,7 +163,7 @@ pub fn open_pool(path: &Path) -> anyhow::Result<Pool> {
         init_conn(&mut c)?;
         migrate(&mut c)?;
     }
-    let mgr = SqliteConnectionManager::file(path).with_init(init_conn);
+    let mgr = r2d2_sqlite::SqliteConnectionManager::file(path).with_init(init_conn);
     Ok(r2d2::Pool::builder().max_size(8).build(mgr)?)
 }
 

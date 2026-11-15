@@ -582,6 +582,15 @@ async fn export_json(State(s): State<AppState>) -> AppResult<Response> {
         .into_response())
 }
 
+/// The browser demo keeps its database in memory and resets on reload, so there is nothing to back up.
+#[cfg(target_arch = "wasm32")]
+async fn backup(State(_): State<AppState>) -> AppResult<Response> {
+    Err(bad(
+        "Backups are not available in the demo: nothing is saved. Export JSON or CSV still works.",
+    ))
+}
+
+#[cfg(not(target_arch = "wasm32"))]
 async fn backup(State(s): State<AppState>) -> AppResult<Response> {
     let path = std::env::temp_dir().join(format!(
         "calorie-man-backup-{}-{}.db",

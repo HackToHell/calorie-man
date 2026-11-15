@@ -14,26 +14,41 @@ path = "src/main.rs"
 name = "calorie_man"
 path = "src/lib.rs"
 
+[workspace]
+members = [".", "demo"]
+default-members = ["."]
+
 [dependencies]
 anyhow = "1"
-axum = { version = "0.8", features = ["macros"] }
 chrono = { version = "0.4", features = ["serde"] }
 chrono-tz = "0.10"
-clap = { version = "4", features = ["derive", "env"] }
 iana-time-zone = "0.1"
-mime_guess = "2"
-r2d2 = "0.8"
-r2d2_sqlite = "0.37"
-reqwest = { version = "0.13", default-features = false, features = ["json", "rustls", "query"] }
+reqwest = { version = "0.13", default-features = false, features = ["json", "query"] }
 rusqlite = { version = "0.42", features = ["bundled"] }
-rust-embed = "8"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 thiserror = "2"
+tokio = { version = "1", features = ["macros", "sync"] }
+tracing = "0.1"
+
+# The server: everything that needs threads, sockets or files.
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+axum = { version = "0.8", features = ["macros"] }
+clap = { version = "4", features = ["derive", "env"] }
+mime_guess = "2"
+r2d2 = "0.8"
+r2d2_sqlite = "0.37"
+reqwest = { version = "0.13", default-features = false, features = ["json", "query", "rustls"] }
+rust-embed = "8"
 tokio = { version = "1", features = ["full"] }
 tower-http = { version = "0.7", features = ["trace", "compression-gzip"] }
-tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+# The browser demo (demo/): the same API and MCP router on an in-memory SQLite, called from JS.
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+axum = { version = "0.8", default-features = false, features = ["json", "query", "form", "macros", "matched-path", "original-uri"] }
+chrono = { version = "0.4", features = ["serde", "wasmbind"] }
+send_wrapper = { version = "0.6", features = ["futures"] }
 
 [dev-dependencies]
 tower = { version = "0.5", features = ["util"] }
@@ -44,3 +59,12 @@ tempfile = "3"
 opt-level = 3
 lto = "thin"
 strip = true
+
+# `make demo`: small wasm for the GitHub Pages demo.
+[profile.demo]
+inherits = "release"
+opt-level = "z"
+lto = true
+codegen-units = 1
+strip = false
+panic = "abort"
