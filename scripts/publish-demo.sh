@@ -31,6 +31,7 @@ if git fetch --quiet "$remote" gh-pages 2>/dev/null; then
   fi
   parent=(-p FETCH_HEAD)
 fi
-commit=$(git commit-tree "$tree" "${parent[@]}" -m "Demo built from $src")
+# ${parent[@]+...}: an empty array is "unbound" under set -u in macOS bash 3.2.
+commit=$(git commit-tree "$tree" ${parent[@]+"${parent[@]}"} -m "Demo built from $src")
 git push "$remote" "$commit:refs/heads/gh-pages"
 echo "Pushed $(git rev-parse --short "$commit") to gh-pages."
