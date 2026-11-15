@@ -68,7 +68,7 @@ test('deleting a person requires typing their name and keeps shared foods', asyn
 
 test('devices keep their chosen person and theme from before the rename to Calorie Man', async ({ page, api }) => {
   await api.user('Jordan');
-  const priya = await api.user('Riley');
+  const riley = await api.user('Riley');
   // A phone that used the app before stored its preferences under the old "eat.*" keys.
   await page.addInitScript((id) => {
     if (!sessionStorage.getItem('seeded')) {
@@ -76,7 +76,7 @@ test('devices keep their chosen person and theme from before the rename to Calor
       localStorage.setItem('eat.theme', 'dark');
       sessionStorage.setItem('seeded', '1');
     }
-  }, priya.id);
+  }, riley.id);
   await page.goto('/');
   await expect(page.getByTestId('user-switcher')).toContainText('Riley');
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
