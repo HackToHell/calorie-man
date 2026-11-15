@@ -1,0 +1,9 @@
+{
+  "name": "Calorie Man",
+  "short_name": "Calorie Man",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#f6ece2",
+  "theme_color": "#3d2340",
+  "icons": [{ "src": "favicon.svg", "sizes": "any", "type": "image/svg+xml" }]
+}
