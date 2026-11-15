@@ -3,6 +3,7 @@
   import Dialog from '../components/Dialog.svelte';
   import PageHeader from '../components/PageHeader.svelte';
   import { api } from '../lib/api';
+  import { DEMO, REPO_URL } from '../lib/env';
   import { KG_PER_LB, fmtDay, isValidDate, kcal, num, optNum, todayStr, txt } from '../lib/format';
   import { app, type Theme } from '../lib/state.svelte';
   import type { Energy, Goal, Settings } from '../lib/types';
@@ -134,7 +135,8 @@
   }
 
   const origin = location.origin;
-  const mcpUrl = $derived(`${origin}/mcp?user=${encodeURIComponent(user.name)}`);
+  // The demo has no server to connect to; show what the URL looks like on a home server instead.
+  const mcpUrl = $derived(`${DEMO ? 'http://192.168.1.20:8484' : origin}/mcp?user=${encodeURIComponent(user.name)}`);
   function copy(text: string) {
     navigator.clipboard?.writeText(text).then(
       () => app.toast('Copied'),
@@ -262,9 +264,13 @@
     <div class="row wrap">
       <a class="btn" href="/api/users/{user.id}/export.csv" download>Export {user.name}'s diary (CSV)</a>
       <a class="btn" href="/api/export.json" download>Export everything (JSON)</a>
-      <a class="btn" href="/api/backup" download>Download database backup</a>
+      {#if !DEMO}<a class="btn" href="/api/backup" download>Download database backup</a>{/if}
     </div>
-    <p class="tiny muted">The backup is a complete SQLite copy; replace the server’s database file with it to restore.</p>
+    {#if DEMO}
+      <p class="tiny muted">Exports work in the demo. Database backups come with the self-hosted app, where your data is actually saved.</p>
+    {:else}
+      <p class="tiny muted">The backup is a complete SQLite copy; replace the server’s database file with it to restore.</p>
+    {/if}
   </div>
 </div>
 
@@ -274,6 +280,12 @@
     Connect an MCP client so an AI can look up products, create foods and recipes, and log meals for you. The URL below defaults tools to
     <b>{user.name}</b>; leave off <code>?user=</code> and say whose diary to use instead.
   </p>
+  {#if DEMO}
+    <p class="small" data-testid="mcp-demo-note">
+      This demo runs inside your browser, so there is no server for an AI to connect to. <a href={REPO_URL} target="_blank" rel="noreferrer">Run Calorie Man</a>
+      on your network and the URL looks like this one.
+    </p>
+  {/if}
   <div class="row">
     <input class="input mono" readonly value={mcpUrl} aria-label="MCP URL" data-testid="mcp-url" />
     <button class="btn" onclick={() => copy(mcpUrl)}>Copy</button>

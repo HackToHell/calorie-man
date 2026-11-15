@@ -774,3 +774,14 @@ pre {
     display: none;
   }
 }
+
+/* Demo build: shown while the WebAssembly backend starts, and if it can't. */
+.boot {
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  margin: 0;
+  padding: 24px;
+  text-align: center;
+  color: var(--muted);
+}

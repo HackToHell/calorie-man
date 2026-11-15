@@ -1,9 +1,11 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import AddFoodDialog from './components/AddFoodDialog.svelte';
+  import DemoBanner from './components/DemoBanner.svelte';
   import Logo from './components/Logo.svelte';
   import Toasts from './components/Toasts.svelte';
   import UserSwitcher from './components/UserSwitcher.svelte';
+  import { DEMO } from './lib/env';
   import { app, navigate } from './lib/state.svelte';
   import Foods from './routes/Foods.svelte';
   import Goals from './routes/Goals.svelte';
@@ -65,6 +67,8 @@
 </script>
 
 <svelte:window onkeydown={onKey} />
+
+{#if DEMO}<DemoBanner />{/if}
 
 {#if app.loadError}
   <div class="center">
@@ -139,7 +143,7 @@
 
 <style>
   .center {
-    min-height: 100dvh;
+    min-height: calc(100dvh - var(--banner-h, 0px));
     display: grid;
     place-items: center;
     padding: 20px;
@@ -147,12 +151,12 @@
   .shell {
     display: grid;
     grid-template-columns: 232px minmax(0, 1fr);
-    min-height: 100dvh;
+    min-height: calc(100dvh - var(--banner-h, 0px));
   }
   .sidebar {
     position: sticky;
-    top: 0;
-    height: 100dvh;
+    top: var(--banner-h, 0px);
+    height: calc(100dvh - var(--banner-h, 0px));
     padding: 30px 18px 24px;
     border-right: 1px solid var(--line);
     background: var(--sidebar);
