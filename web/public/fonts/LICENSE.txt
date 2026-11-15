@@ -1,0 +1,3 @@
+Federo (c) 2011 Cyreal and Outfit (c) 2021 The Outfit Project Authors are licensed under the
+SIL Open Font License, Version 1.1 (https://openfontlicense.org). Files are the Google Fonts woff2
+subsets used by the design, vendored so the app works without internet access.

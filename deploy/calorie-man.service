@@ -1,0 +1,15 @@
+# systemd unit. Copy the release binary to /usr/local/bin/calorie-man, then:
+#   sudo cp deploy/calorie-man.service /etc/systemd/system/ && sudo systemctl enable --now calorie-man
+[Unit]
+Description=Calorie Man calorie tracker
+After=network-online.target
+
+[Service]
+ExecStart=/usr/local/bin/calorie-man serve --db /var/lib/calorie-man/calorie-man.db --bind 0.0.0.0:8484
+StateDirectory=calorie-man
+DynamicUser=yes
+Restart=on-failure
+# Environment=USDA_API_KEY=your-free-key
+
+[Install]
+WantedBy=multi-user.target

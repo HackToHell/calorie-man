@@ -1,0 +1,776 @@
+/* Calorie Man · "Terrace" design system: stepped corners, pastel macro colours on cream (light) or
+   plum (dark), Federo for display type and Outfit for everything else. */
+
+@font-face {
+  font-family: 'Federo';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/federo-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191,
+    U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Outfit';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url('/fonts/outfit-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF,
+    U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: 'Outfit';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url('/fonts/outfit-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191,
+    U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+/* ---------------------------------------------------------------------------------------------
+   Tokens. Light is the phone artboard, dark is the desktop artboard. */
+:root {
+  --peach: oklch(0.84 0.08 55);
+  --lilac: oklch(0.8 0.08 305);
+  --butter: oklch(0.91 0.08 95);
+  --sea: oklch(0.84 0.07 175);
+  --sky: oklch(0.82 0.06 240);
+  --on-pastel: oklch(0.22 0.04 315);
+
+  --bg: oklch(0.955 0.018 60);
+  --surface: oklch(0.995 0.005 60);
+  --surface-2: oklch(0.972 0.012 60);
+  --field: oklch(0.955 0.016 60);
+  --field-focus: oklch(0.975 0.012 60);
+  --sidebar: oklch(0.935 0.02 60);
+  --ink: oklch(0.3 0.06 330);
+  --muted: oklch(0.5 0.04 330);
+  --line: oklch(0.9 0.02 60);
+  --track: oklch(0.3 0.06 330 / 0.07);
+  --hover: oklch(0.3 0.06 330 / 0.05);
+  --solid: oklch(0.3 0.06 330);
+  --solid-ink: oklch(0.97 0.01 60);
+  --solid-muted: oklch(0.85 0.03 330);
+  --solid-ghost: oklch(1 0 0 / 0.1);
+  --nav-active-bg: oklch(0.84 0.08 55 / 0.38);
+  --nav-active-ink: oklch(0.3 0.06 330);
+  --focus: oklch(0.5 0.13 305);
+  --scrim: oklch(0.25 0.04 330 / 0.45);
+
+  /* Pastels are for fills; these darker versions are for text on light surfaces. */
+  --peach-ink: oklch(0.5 0.11 50);
+  --lilac-ink: oklch(0.47 0.13 305);
+  --butter-ink: oklch(0.5 0.09 90);
+  --sea-ink: oklch(0.47 0.08 175);
+  --sky-ink: oklch(0.47 0.09 240);
+  --danger: oklch(0.52 0.17 25);
+  --danger-soft: oklch(0.93 0.04 25);
+  --over: oklch(0.72 0.12 32);
+  --band-1: oklch(0.84 0.08 55 / 0.16);
+  --band-2: oklch(0.8 0.08 305 / 0.16);
+  --band-3: oklch(0.91 0.08 95 / 0.4);
+  --arc: oklch(0.3 0.06 330 / 0.6);
+
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --bg: oklch(0.22 0.04 315);
+    --surface: oklch(0.27 0.045 315);
+    --surface-2: oklch(0.315 0.045 315);
+    --field: oklch(0.33 0.045 315);
+    --field-focus: oklch(0.36 0.05 315);
+    --sidebar: oklch(0.22 0.04 315);
+    --ink: oklch(0.97 0.01 60);
+    --muted: oklch(0.78 0.03 320);
+    --line: oklch(1 0 0 / 0.08);
+    --track: oklch(1 0 0 / 0.08);
+    --hover: oklch(1 0 0 / 0.05);
+    --solid: oklch(0.36 0.06 320);
+    --solid-ink: oklch(0.97 0.01 60);
+    --solid-muted: oklch(0.82 0.03 320);
+    --solid-ghost: oklch(1 0 0 / 0.08);
+    --nav-active-bg: oklch(0.84 0.08 55 / 0.18);
+    --nav-active-ink: oklch(0.9 0.06 55);
+    --focus: oklch(0.84 0.08 55);
+    --scrim: oklch(0.1 0.02 315 / 0.6);
+    --peach-ink: var(--peach);
+    --lilac-ink: var(--lilac);
+    --butter-ink: var(--butter);
+    --sea-ink: var(--sea);
+    --sky-ink: var(--sky);
+    --danger: oklch(0.76 0.13 25);
+    --danger-soft: oklch(0.35 0.07 25);
+    --band-1: oklch(0.84 0.08 55 / 0.08);
+    --band-2: oklch(0.8 0.08 305 / 0.1);
+    --band-3: oklch(0.91 0.08 95 / 0.12);
+    --arc: oklch(1 0 0 / 0.5);
+    color-scheme: dark;
+  }
+}
+:root[data-theme='dark'] {
+  --bg: oklch(0.22 0.04 315);
+  --surface: oklch(0.27 0.045 315);
+  --surface-2: oklch(0.315 0.045 315);
+  --field: oklch(0.33 0.045 315);
+  --field-focus: oklch(0.36 0.05 315);
+  --sidebar: oklch(0.22 0.04 315);
+  --ink: oklch(0.97 0.01 60);
+  --muted: oklch(0.78 0.03 320);
+  --line: oklch(1 0 0 / 0.08);
+  --track: oklch(1 0 0 / 0.08);
+  --hover: oklch(1 0 0 / 0.05);
+  --solid: oklch(0.36 0.06 320);
+  --solid-ink: oklch(0.97 0.01 60);
+  --solid-muted: oklch(0.82 0.03 320);
+  --solid-ghost: oklch(1 0 0 / 0.08);
+  --nav-active-bg: oklch(0.84 0.08 55 / 0.18);
+  --nav-active-ink: oklch(0.9 0.06 55);
+  --focus: oklch(0.84 0.08 55);
+  --scrim: oklch(0.1 0.02 315 / 0.6);
+  --peach-ink: var(--peach);
+  --lilac-ink: var(--lilac);
+  --butter-ink: var(--butter);
+  --sea-ink: var(--sea);
+  --sky-ink: var(--sky);
+  --danger: oklch(0.76 0.13 25);
+  --danger-soft: oklch(0.35 0.07 25);
+  --band-1: oklch(0.84 0.08 55 / 0.08);
+  --band-2: oklch(0.8 0.08 305 / 0.1);
+  --band-3: oklch(0.91 0.08 95 / 0.12);
+  --arc: oklch(1 0 0 / 0.5);
+  color-scheme: dark;
+}
+
+:root {
+  /* Semantic aliases used by components. */
+  --kcal: var(--peach);
+  --protein: var(--lilac);
+  --carbs: var(--butter);
+  --fat: var(--sea);
+  --fiber: var(--sky);
+  --weight: var(--lilac);
+  --trend: var(--peach);
+  --protein-text: var(--lilac-ink);
+  --carbs-text: var(--butter-ink);
+  --fat-text: var(--sea-ink);
+  --fiber-text: var(--sky-ink);
+  --kcal-text: var(--peach-ink);
+  --accent: var(--peach);
+  --accent-ink: var(--on-pastel);
+  --accent-soft: oklch(0.84 0.08 55 / 0.22);
+  --accent-text: var(--peach-ink);
+  --protein-soft: oklch(0.8 0.08 305 / 0.22);
+  --warn: var(--peach-ink);
+  --warn-soft: oklch(0.84 0.08 55 / 0.22);
+  --card: var(--surface);
+  --card-2: var(--surface-2);
+  --text: var(--ink);
+  --faint: var(--muted);
+
+  --font: 'Outfit', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --display: 'Federo', 'Outfit', serif;
+  --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+  --octagon: polygon(30% 0, 70% 0, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0 70%, 0 30%);
+}
+
+/* ---------------------------------------------------------------------------------------------
+   Base */
+* {
+  box-sizing: border-box;
+}
+
+/* Stepped "terrace" corners: two notches per corner, each var(--t) deep. Defined on every element
+   (not :root) so var(--t) resolves per element: cards use 8px steps, buttons 5px, small buttons 3px. */
+*,
+::before,
+::after {
+  --terrace: polygon(
+    0 calc(2 * var(--t)),
+    var(--t) calc(2 * var(--t)),
+    var(--t) var(--t),
+    calc(2 * var(--t)) var(--t),
+    calc(2 * var(--t)) 0,
+    calc(100% - 2 * var(--t)) 0,
+    calc(100% - 2 * var(--t)) var(--t),
+    calc(100% - var(--t)) var(--t),
+    calc(100% - var(--t)) calc(2 * var(--t)),
+    100% calc(2 * var(--t)),
+    100% calc(100% - 2 * var(--t)),
+    calc(100% - var(--t)) calc(100% - 2 * var(--t)),
+    calc(100% - var(--t)) calc(100% - var(--t)),
+    calc(100% - 2 * var(--t)) calc(100% - var(--t)),
+    calc(100% - 2 * var(--t)) 100%,
+    calc(2 * var(--t)) 100%,
+    calc(2 * var(--t)) calc(100% - var(--t)),
+    var(--t) calc(100% - var(--t)),
+    var(--t) calc(100% - 2 * var(--t)),
+    0 calc(100% - 2 * var(--t))
+  );
+}
+
+:root {
+  --t: 8px;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font);
+  font-size: 15px;
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  overflow-y: scroll;
+}
+
+a {
+  color: var(--accent-text);
+}
+
+h1,
+h2,
+h3,
+h4 {
+  margin: 0;
+  line-height: 1.15;
+  font-weight: 600;
+}
+
+h1 {
+  font-family: var(--display);
+  font-weight: 400;
+  font-size: 2.2rem;
+}
+
+h2 {
+  font-size: 1rem;
+}
+
+h3 {
+  font-size: 0.95rem;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+.display {
+  font-family: var(--display);
+  font-weight: 400;
+  line-height: 1;
+}
+
+.eyebrow {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.num {
+  font-variant-numeric: tabular-nums;
+}
+
+.muted {
+  color: var(--muted);
+}
+
+.faint {
+  color: var(--muted);
+}
+
+.small {
+  font-size: 0.85rem;
+}
+
+.tiny {
+  font-size: 0.76rem;
+}
+
+.terrace {
+  clip-path: var(--terrace);
+}
+
+.terrace-sm {
+  --t: 5px;
+  clip-path: var(--terrace);
+}
+
+.oct {
+  clip-path: var(--octagon);
+}
+
+.diamond {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  transform: rotate(45deg);
+  flex: none;
+}
+
+.swatch {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  flex: none;
+}
+
+/* ---------------------------------------------------------------------------------------------
+   Cards */
+.card {
+  --t: 8px;
+  clip-path: var(--terrace);
+  background: var(--surface);
+  padding: 22px;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.card + .card {
+  margin-top: 16px;
+}
+
+.card.solid {
+  background: var(--solid);
+  color: var(--solid-ink);
+}
+
+.card-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.card-title {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.card-sub {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.wrap {
+  flex-wrap: wrap;
+}
+
+.spacer {
+  flex: 1;
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.grid2 {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.grid3 {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+@media (max-width: 640px) {
+  .grid3 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* ---------------------------------------------------------------------------------------------
+   Controls. Clip-paths hide outlines, so focus is drawn with an inset shadow. */
+.btn {
+  --t: 5px;
+  clip-path: var(--terrace);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 40px;
+  padding: 0 16px;
+  border: 0;
+  background: var(--surface-2);
+  color: var(--ink);
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 14px;
+  white-space: nowrap;
+  text-decoration: none;
+  transition: background 0.12s, filter 0.12s;
+}
+
+.btn:hover {
+  background: var(--hover);
+  box-shadow: inset 0 0 0 100px var(--hover);
+}
+
+.btn:focus-visible,
+.tab:focus-visible,
+.chip:focus-visible,
+.item:focus-visible {
+  outline: none;
+  box-shadow: inset 0 0 0 2px var(--focus);
+}
+
+.btn.primary {
+  background: var(--peach);
+  color: var(--on-pastel);
+  font-weight: 700;
+}
+
+.btn.primary:hover {
+  filter: brightness(1.04);
+  box-shadow: none;
+}
+
+.btn.primary:focus-visible {
+  box-shadow: inset 0 0 0 2px var(--on-pastel);
+}
+
+.btn.danger {
+  color: var(--danger);
+}
+
+.btn.danger.solid {
+  background: var(--danger);
+  color: #fff;
+}
+
+.btn.ghost {
+  background: transparent;
+}
+
+.btn.small {
+  --t: 3px;
+  min-height: 32px;
+  padding: 0 12px;
+  font-size: 13px;
+}
+
+.btn.icon {
+  padding: 0;
+  width: 40px;
+}
+
+.btn.small.icon {
+  width: 32px;
+}
+
+.btn:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.input,
+select.input,
+textarea.input {
+  --t: 5px;
+  clip-path: var(--terrace);
+  width: 100%;
+  min-height: 42px;
+  padding: 8px 12px;
+  border: 0;
+  background: var(--field);
+  min-width: 0;
+  font-size: 1rem;
+  color: var(--ink);
+}
+
+/* Stepped clip-paths break ring-style borders, so fields are told apart by tone and focus is an underline. */
+.input:focus,
+.input:focus-visible,
+select.input:focus-visible,
+textarea.input:focus-visible {
+  outline: none;
+  background: var(--field-focus);
+  box-shadow: inset 0 -2px 0 var(--focus);
+}
+
+.input::placeholder {
+  color: var(--muted);
+  opacity: 0.85;
+}
+
+@media (max-width: 640px) {
+  .input,
+  select.input,
+  textarea.input {
+    font-size: 16px;
+  }
+}
+
+textarea.input {
+  min-height: 70px;
+  resize: vertical;
+}
+
+.input.num {
+  text-align: right;
+}
+
+label.field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  font-size: 0.8rem;
+  color: var(--muted);
+  min-width: 0;
+}
+
+label.field > span {
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+label.check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+input[type='checkbox'],
+input[type='radio'] {
+  accent-color: var(--lilac-ink);
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 1px 7px;
+  background: var(--track);
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--muted);
+  white-space: nowrap;
+  letter-spacing: 0.02em;
+}
+
+.chip.accent {
+  background: var(--accent-soft);
+  color: var(--accent-text);
+}
+
+.chip.protein {
+  background: var(--protein-soft);
+  color: var(--protein-text);
+}
+
+.chip.warn {
+  background: var(--warn-soft);
+  color: var(--warn);
+}
+
+.tabs {
+  --t: 5px;
+  clip-path: var(--terrace);
+  display: flex;
+  gap: 2px;
+  padding: 4px;
+  background: var(--surface-2);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.tab {
+  flex: 1 0 auto;
+  padding: 6px 12px;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.tab.active {
+  background: var(--nav-active-bg);
+  color: var(--nav-active-ink);
+}
+
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.list > li + li {
+  border-top: 1px solid var(--line);
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 6px;
+  width: 100%;
+  max-width: 100%;
+  background: none;
+  border: 0;
+  text-align: left;
+  cursor: pointer;
+  min-width: 0;
+  color: inherit;
+}
+
+.item:hover {
+  background: var(--hover);
+}
+
+.item .grow {
+  flex: 1;
+  min-width: 0;
+}
+
+.ellipsis {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.banner {
+  --t: 5px;
+  clip-path: var(--terrace);
+  padding: 10px 14px;
+  background: var(--warn-soft);
+  color: var(--ink);
+  font-size: 0.9rem;
+}
+
+.banner.error {
+  background: var(--danger-soft);
+}
+
+.banner.ok {
+  background: oklch(0.84 0.07 175 / 0.25);
+}
+
+.empty {
+  padding: 24px 8px;
+  text-align: center;
+  color: var(--muted);
+}
+
+table.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+table.table th,
+table.table td {
+  padding: 8px 6px;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+}
+
+table.table th {
+  font-weight: 600;
+  color: var(--muted);
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+table.table td.r,
+table.table th.r {
+  text-align: right;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+details > summary {
+  cursor: pointer;
+  font-weight: 600;
+  list-style: none;
+}
+
+details > summary::-webkit-details-marker {
+  display: none;
+}
+
+details > summary::before {
+  content: '';
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin: 0 10px 1px 2px;
+  background: var(--muted);
+  transform: rotate(45deg) scale(0.8);
+  transition: background 0.15s;
+}
+
+details[open] > summary::before {
+  background: var(--peach);
+}
+
+.dot {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+}
+
+code,
+pre {
+  font-family: var(--mono);
+  font-size: 0.82rem;
+}
+
+pre {
+  --t: 5px;
+  clip-path: var(--terrace);
+  background: var(--surface-2);
+  padding: 12px;
+  overflow-x: auto;
+  white-space: pre;
+}
+
+.nowrap {
+  white-space: nowrap;
+}
+
+@media (max-width: 640px) {
+  .hide-sm {
+    display: none;
+  }
+}

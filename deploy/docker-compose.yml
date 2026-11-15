@@ -1,0 +1,11 @@
+services:
+  calorie-man:
+    build: ..
+    restart: unless-stopped
+    ports:
+      - "8484:8484"
+    volumes:
+      - ./data:/data
+    environment:
+      TZ: America/Los_Angeles
+      # USDA_API_KEY: your-free-key   # optional, https://fdc.nal.usda.gov/api-key-signup

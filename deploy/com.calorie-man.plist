@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- macOS launchd agent. Edit the paths, then:
+     cp deploy/com.calorie-man.plist ~/Library/LaunchAgents/ && launchctl load ~/Library/LaunchAgents/com.calorie-man.plist -->
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key><string>com.calorie-man</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/usr/local/bin/calorie-man</string>
+    <string>serve</string>
+    <string>--db</string><string>/Users/YOU/Library/Application Support/calorie-man/calorie-man.db</string>
+    <string>--bind</string><string>0.0.0.0:8484</string>
+  </array>
+  <key>RunAtLoad</key><true/>
+  <key>KeepAlive</key><true/>
+  <key>StandardErrorPath</key><string>/tmp/calorie-man.log</string>
+</dict>
+</plist>
