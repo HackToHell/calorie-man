@@ -3,7 +3,7 @@
 A calorie, protein and nutrient tracker for a household, built to run on your home network. One small Rust
 binary serves the web UI, a JSON API and an MCP endpoint for AI assistants. Data is a single SQLite file.
 
-**[Try the live demo →](https://hacktohell.github.io/calorie-man/)** It runs entirely in your browser: the
+**[Try the live demo →](https://about.hacktohell.org/calorie-man/)** It runs entirely in your browser: the
 same Rust backend compiled to WebAssembly, with sample data for two people. Nothing you enter is saved;
 reloading the page starts over.
 

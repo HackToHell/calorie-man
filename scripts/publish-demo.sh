@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Publish web/dist-demo (from `make demo`) to the gh-pages branch, which GitHub Pages serves at
-# https://hacktohell.github.io/calorie-man/. Uses this repository's git identity and remote, adds one
+# https://about.hacktohell.org/calorie-man/ (hacktohell.github.io redirects there). Uses this repository's git identity and remote, adds one
 # commit on top of the existing gh-pages history, and leaves the working tree untouched.
 set -euo pipefail
 cd "$(dirname "$0")/.."
