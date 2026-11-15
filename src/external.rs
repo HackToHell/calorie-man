@@ -11,6 +11,8 @@ use serde::Serialize;
 use serde_json::Value;
 
 const CACHE_SECS: i64 = 7 * 24 * 3600;
+/// Tries per request when the upstream answers with a transient error.
+const UPSTREAM_ATTEMPTS: u32 = 3;
 
 #[derive(Debug, Clone, Serialize)]
 pub struct CandServing {
@@ -112,9 +114,20 @@ async fn get_json(
     if let Some((k, v)) = secret {
         q.push((k, v));
     }
-    let resp = state.http.get(url).query(&q).send().await.map_err(|e| {
-        AppError::Upstream(format!("{provider} is unreachable: {}", e.without_url()))
-    })?;
+    // USDA's front end intermittently answers valid requests with an HTML 400 (and gateways with
+    // 502-504), so retry those a couple of times before giving up.
+    let mut attempt = 0;
+    let resp = loop {
+        attempt += 1;
+        let resp = state.http.get(url).query(&q).send().await.map_err(|e| {
+            AppError::Upstream(format!("{provider} is unreachable: {}", e.without_url()))
+        })?;
+        let transient = matches!(resp.status().as_u16(), 400 | 502 | 503 | 504);
+        if !transient || attempt >= UPSTREAM_ATTEMPTS {
+            break resp;
+        }
+        tokio::time::sleep(std::time::Duration::from_millis(200 * attempt as u64)).await;
+    };
     let status = resp.status();
     if status.as_u16() == 404 {
         return Err(AppError::NotFound(format!("{provider}: not found")));
@@ -332,6 +345,9 @@ fn usda_servings(v: &Value, basis_unit: &str) -> Vec<CandServing> {
     }
     // Detail endpoint: foodPortions. Search endpoint: foodMeasures.
     if let Some(portions) = v["foodPortions"].as_array() {
+        // USDA's sequenceNumber is the intended order (the first one becomes the default serving).
+        let mut portions: Vec<&Value> = portions.iter().collect();
+        portions.sort_by_key(|p| p["sequenceNumber"].as_i64().unwrap_or(i64::MAX));
         for p in portions {
             let Some(g) = num(&p["gramWeight"]).filter(|x| *x > 0.0) else {
                 continue;
@@ -347,7 +363,11 @@ fn usda_servings(v: &Value, basis_unit: &str) -> Vec<CandServing> {
                         .as_str()
                         .filter(|u| *u != "undetermined")
                         .unwrap_or("");
-                    let modifier = p["modifier"].as_str().unwrap_or("");
+                    // Survey (FNDDS) modifiers are numeric portion codes ("90000"), not words.
+                    let modifier = p["modifier"]
+                        .as_str()
+                        .filter(|m| !m.chars().all(|c| c.is_ascii_digit()))
+                        .unwrap_or("");
                     let base = [unit, modifier]
                         .iter()
                         .filter(|s| !s.is_empty())
@@ -1066,6 +1086,27 @@ mod tests {
             "{:?}",
             c.servings
         );
+    }
+
+    #[test]
+    fn fndds_portion_codes_are_not_serving_labels() {
+        // Survey (FNDDS) portions carry a numeric food-code `modifier` ("90000" = quantity not
+        // specified); those must never become labels, and USDA's sequenceNumber sets the order.
+        let c = parse_usda(&fixture("usda_food_2709223.json")).unwrap();
+        assert_eq!(c.name, "Avocado, raw");
+        let labels: Vec<&str> = c.servings.iter().map(|s| s.label.as_str()).collect();
+        assert!(
+            labels
+                .iter()
+                .all(|l| !l.chars().all(|ch| ch.is_ascii_digit())),
+            "{labels:?}"
+        );
+        assert_eq!(
+            labels,
+            ["slice", "fruit", "cup", "cup, mashed or pureed"],
+            "in USDA sequence order"
+        );
+        assert_eq!(c.servings[1].amount, 150.0);
     }
 
     #[test]

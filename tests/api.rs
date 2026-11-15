@@ -9,6 +9,7 @@ use calorie_man::config::Config;
 use calorie_man::AppState;
 use http_body_util::BodyExt;
 use serde_json::{json, Value};
+use std::sync::atomic::{AtomicUsize, Ordering};
 use tower::ServiceExt;
 
 fn fixture(name: &str) -> String {
@@ -18,6 +19,8 @@ fn fixture(name: &str) -> String {
     ))
     .unwrap()
 }
+
+static FLAKY_USDA: AtomicUsize = AtomicUsize::new(0);
 
 async fn mock_external() -> String {
     let app = Router::new()
@@ -35,6 +38,12 @@ async fn mock_external() -> String {
             get(
                 |axum::extract::Path(id): axum::extract::Path<String>| async move {
                     match id.as_str() {
+                        // USDA's nginx intermittently answers identical requests with an HTML 400.
+                        "2709223" if FLAKY_USDA.fetch_add(1, Ordering::SeqCst) == 0 => (
+                            StatusCode::BAD_REQUEST,
+                            "<html><head><title>400 Bad Request</title></head></html>".to_string(),
+                        ),
+                        "2709223" => (StatusCode::OK, fixture("usda_food_2709223.json")),
                         "2460407" => (StatusCode::OK, fixture("usda_food_2460407.json")),
                         "173944" => (StatusCode::OK, fixture("usda_food_173944.json")),
                         _ => (StatusCode::NOT_FOUND, "{}".to_string()),
@@ -754,6 +763,28 @@ async fn external_search_import_and_barcode() {
         .await;
     assert!(imp["food"]["servings"].as_array().unwrap().len() > 2);
     assert!(imp["food"]["nutrients"]["vitamin_b6"].as_f64().is_some());
+}
+
+#[tokio::test]
+async fn usda_transient_400_is_retried_and_fndds_servings_are_named() {
+    let t = T::new().await;
+    two_users(&t).await;
+    // The mock fails the first request for this id the way USDA's nginx does.
+    let imp = t
+        .post(
+            "/api/external/import",
+            json!({"source": "usda", "id": "2709223"}),
+        )
+        .await;
+    assert_eq!(imp["food"]["name"], "Avocado, raw");
+    let labels: Vec<&str> = imp["food"]["servings"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|s| s["label"].as_str().unwrap())
+        .collect();
+    assert!(!labels.contains(&"90000"), "{labels:?}");
+    assert_eq!(imp["food"]["servings"][0]["label"], "slice");
 }
 
 #[tokio::test]
