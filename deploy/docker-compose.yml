@@ -1,3 +1,6 @@
+# Calorie Man on your home network over plain HTTP: http://<this-machine>:8484
+#   docker compose -f deploy/docker-compose.yml up -d
+# For HTTPS with real certificates, use deploy/caddy/ instead.
 services:
   calorie-man:
     build: ..
@@ -5,7 +8,10 @@ services:
     ports:
       - "8484:8484"
     volumes:
-      - ./data:/data
+      - calorie-man-data:/data
     environment:
-      TZ: America/Los_Angeles
+      TZ: America/Los_Angeles # used until each person sets their own time zone in Profile
       # USDA_API_KEY: your-free-key   # optional, https://fdc.nal.usda.gov/api-key-signup
+
+volumes:
+  calorie-man-data:

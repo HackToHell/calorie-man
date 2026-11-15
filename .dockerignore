@@ -1,0 +1,17 @@
+# Keep the build context small: sources only.
+.git
+target
+data
+*.db
+*.db-*
+bugbash/reports
+web/node_modules
+web/dist
+web/dist-demo
+web/src/demo/pkg
+web/test-results
+web/playwright-report
+web/bugbash-output
+docs/screenshots
+deploy/caddy/.env
+**/.DS_Store

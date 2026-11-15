@@ -1,0 +1,31 @@
+# Calorie Man behind Caddy with HTTPS. Settings come from .env (see .env.example):
+#   DOMAIN  the name you open, e.g. calories.example.com
+#   CERTS   how the certificate is obtained: cloudflare (default), internal or public
+
+(certs-cloudflare) {
+	# Let's Encrypt through a DNS challenge at Cloudflare. DOMAIN can point at a home-network address
+	# such as 192.168.1.20: nothing has to be reachable from the internet.
+	tls {
+		dns cloudflare {env.CLOUDFLARE_API_TOKEN}
+	}
+}
+
+(certs-internal) {
+	# Caddy's own certificate authority: no domain or account needed. Each device has to trust Caddy's
+	# root certificate once (deploy/caddy/README.md).
+	tls internal
+}
+
+(certs-public) {
+	# Let's Encrypt over HTTP: ports 80 and 443 must be forwarded to this machine from the internet.
+	# Calorie Man has no login of its own, so this mode puts a password in front of it.
+	basic_auth {
+		{$BASIC_AUTH_USER} {$BASIC_AUTH_HASH}
+	}
+}
+
+{$DOMAIN} {
+	import certs-{$CERTS:cloudflare}
+	encode zstd gzip
+	reverse_proxy calorie-man:8484
+}

@@ -1,0 +1,41 @@
+# Calorie Man behind Caddy with HTTPS certificates.
+#   cp .env.example .env    # then edit it
+#   docker compose up -d
+# See README.md in this folder.
+services:
+  calorie-man:
+    build: ../..
+    restart: unless-stopped
+    volumes:
+      - calorie-man-data:/data
+    environment:
+      TZ: ${TZ:-UTC}
+      USDA_API_KEY: ${USDA_API_KEY:-}
+    # No published port: only Caddy talks to the app.
+
+  caddy:
+    build:
+      context: .
+      dockerfile: Dockerfile.caddy
+    restart: unless-stopped
+    depends_on:
+      - calorie-man
+    ports:
+      - "${HTTP_PORT:-80}:80"
+      - "${HTTPS_PORT:-443}:443"
+      - "${HTTPS_PORT:-443}:443/udp" # HTTP/3
+    environment:
+      DOMAIN: ${DOMAIN:?set DOMAIN in .env}
+      CERTS: ${CERTS:-cloudflare}
+      CLOUDFLARE_API_TOKEN: ${CLOUDFLARE_API_TOKEN:-}
+      BASIC_AUTH_USER: ${BASIC_AUTH_USER:-}
+      BASIC_AUTH_HASH: ${BASIC_AUTH_HASH:-}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data # certificates and Caddy's local CA; keep this volume
+      - caddy-config:/config
+
+volumes:
+  calorie-man-data:
+  caddy-data:
+  caddy-config:

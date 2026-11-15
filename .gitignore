@@ -5,3 +5,6 @@
 *.db-wal
 *.db-shm
 .DS_Store
+
+# Secrets for deploy/caddy
+.env
